@@ -1,6 +1,7 @@
 {
   "name": "chatbot-isf",
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "process:ram": "tsx --tsconfig tsconfig.scripts.json scripts/processRam.ts",
     "ng": "ng",
