@@ -14,9 +14,10 @@
 
   <div class="message-bubble">
 
-    <p>
-      {{ message.text }}
-    </p>
+    <div
+  class="message-content"
+  [innerHTML]="renderedText"
+></div>
 
     @if (
       message.role === 'assistant' &&

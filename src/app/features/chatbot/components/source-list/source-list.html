@@ -1,41 +1,69 @@
 @if (sources.length > 0) {
 
-  <div class="sources">
+  <section
+    class="sources"
+    aria-label="Fuentes consultadas"
+  >
 
-    <p class="sources-title">
-      Fuentes consultadas
-    </p>
+    <div class="sources-header">
 
-    @for (source of sources; track $index) {
+      <span class="sources-icon">
+        📚
+      </span>
 
-      <article class="source-card">
+      <p class="sources-title">
+        Fuentes consultadas
+      </p>
 
-        <strong>
-          {{ source.document }}
-        </strong>
+    </div>
 
-        @if (source.resolution) {
-          <span>
-            {{ source.resolution }}
-          </span>
-        }
+    <div class="sources-list">
 
-        @if (source.article) {
-          <span>
-            Artículo {{ source.article }}
-          </span>
-        }
+      @for (
+        source of sources;
+        track source.chunkId
+      ) {
 
-        @if (source.section) {
-          <span>
-            {{ source.section }}
-          </span>
-        }
+        <article class="source-card">
 
-      </article>
+          <strong class="source-document">
+            {{ source.document }}
+          </strong>
 
-    }
+          <div class="source-metadata">
 
-  </div>
+            @if (source.resolution) {
+
+              <span class="source-item">
+                {{ source.resolution }}
+              </span>
+
+            }
+
+            @if (source.article !== null) {
+
+              <span class="source-item source-article">
+                Artículo {{ source.article }}
+              </span>
+
+            }
+
+            @if (source.section) {
+
+              <span class="source-item">
+                Sección: {{ source.section }}
+              </span>
+
+            }
+
+          </div>
+
+        </article>
+
+      }
+
+    </div>
+
+  </section>
 
 }
