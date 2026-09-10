@@ -1,47 +1,134 @@
-import { Component } from '@angular/core';
+import {
+  Component,
+} from '@angular/core';
 
-import { ChatMessage } from '../../models/chat-message.model';
+import {
+  finalize,
+} from 'rxjs';
 
-import { ChatMessage as ChatMessageComponent } from '../chat-message/chat-message';
-import { ChatInput } from '../chat-input/chat-input';
-import { BotAvatar } from '../bot-avatar/bot-avatar';
+import {
+  ChatMessage,
+} from '../../models/chat-message.model';
+
+import {
+  AvatarState,
+} from '../../models/avatar-state.model';
+
+import {
+  ChatService,
+} from '../../services/chat.service';
+
+import {
+  ChatMessage as ChatMessageComponent,
+} from '../chat-message/chat-message';
+
+import {
+  ChatInput,
+} from '../chat-input/chat-input';
+
+import {
+  BotAvatar,
+} from '../bot-avatar/bot-avatar';
+
+// =====================================================
+// COMPONENTE
+// =====================================================
 
 @Component({
-  selector: 'app-chatbot-shell',
-  standalone: true,
+  selector:
+    'app-chatbot-shell',
+
+  standalone:
+    true,
+
   imports: [
     ChatMessageComponent,
     ChatInput,
     BotAvatar,
   ],
-  templateUrl: './chatbot-shell.html',
-  styleUrl: './chatbot-shell.css',
+
+  templateUrl:
+    './chatbot-shell.html',
+
+  styleUrl:
+    './chatbot-shell.css',
 })
 export class ChatbotShell {
 
-  messages: ChatMessage[] = [
-    {
-      id: crypto.randomUUID(),
+  // ===================================================
+  // ESTADO
+  // ===================================================
 
-      role: 'assistant',
+  messages:
+    ChatMessage[] = [
+      {
+        id:
+          crypto.randomUUID(),
+
+        role:
+          'assistant',
+
+        text:
+          'Hola. Soy el Asistente Institucional del ISFD. Puedo ayudarte con consultas sobre el Régimen Académico Marco y otra información institucional autorizada.',
+
+        createdAt:
+          new Date(),
+      },
+    ];
+
+  isLoading =
+    false;
+
+  avatarState:
+    AvatarState =
+      'idle';
+
+  // ===================================================
+  // DEPENDENCIAS
+  // ===================================================
+
+  constructor(
+    private readonly chatService:
+      ChatService
+  ) {}
+
+  // ===================================================
+  // ENVIAR MENSAJE
+  // ===================================================
+
+  handleSendMessage(
+    text: string
+  ): void {
+
+    const cleanText =
+      text.trim();
+
+    if (
+      !cleanText ||
+      this.isLoading
+    ) {
+
+      return;
+    }
+
+    // -------------------------------------------------
+    // 1. Mensaje del usuario
+    // -------------------------------------------------
+
+    const userMessage:
+      ChatMessage = {
+
+      id:
+        crypto.randomUUID(),
+
+      role:
+        'user',
 
       text:
-        'Hola. Soy el Asistente Institucional del ISFD. Puedo ayudarte con consultas sobre el Régimen Académico Marco y otra información institucional autorizada.',
+        cleanText,
 
-      createdAt: new Date(),
-    },
-  ];
-
-  handleSendMessage(text: string): void {
-
-    const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-
-      role: 'user',
-
-      text,
-
-      createdAt: new Date(),
+      createdAt:
+        new Date(),
     };
 
     this.messages = [
@@ -49,31 +136,119 @@ export class ChatbotShell {
       userMessage,
     ];
 
-    /*
-     * Respuesta temporal.
-     *
-     * En un bloque posterior esta parte
-     * llamará a /api/chat.
-     */
+    // -------------------------------------------------
+    // 2. Estado de espera
+    // -------------------------------------------------
 
-    setTimeout(() => {
+    this.isLoading =
+      true;
 
-      const assistantMessage: ChatMessage = {
-        id: crypto.randomUUID(),
+    this.avatarState =
+      'thinking';
 
-        role: 'assistant',
+    // -------------------------------------------------
+    // 3. Llamar al backend
+    // -------------------------------------------------
 
-        text:
-          'Todavía estoy funcionando en modo local. En el próximo bloque conectaremos el chatbot con la base de conocimiento institucional.',
+    this.chatService
+      .ask(
+        cleanText
+      )
+      .pipe(
+        finalize(
+          () => {
 
-        createdAt: new Date(),
-      };
+            this.isLoading =
+              false;
 
-      this.messages = [
-        ...this.messages,
-        assistantMessage,
-      ];
+            if (
+              this.avatarState !==
+              'error'
+            ) {
 
-    }, 600);
+              this.avatarState =
+                'idle';
+            }
+          }
+        )
+      )
+      .subscribe({
+
+        // =============================================
+        // RESPUESTA CORRECTA
+        // =============================================
+
+        next:
+          (
+            response
+          ) => {
+
+            this.avatarState =
+              'replying';
+
+            const assistantMessage:
+              ChatMessage = {
+
+              id:
+                crypto.randomUUID(),
+
+              role:
+                'assistant',
+
+              text:
+                response.reply,
+
+              createdAt:
+                new Date(),
+
+              sources:
+                response.sources,
+            };
+
+            this.messages = [
+              ...this.messages,
+              assistantMessage,
+            ];
+          },
+
+        // =============================================
+        // ERROR
+        // =============================================
+
+        error:
+          (
+            error
+          ) => {
+
+            console.error(
+              'Error consultando /api/chat:',
+              error
+            );
+
+            this.avatarState =
+              'error';
+
+            const assistantMessage:
+              ChatMessage = {
+
+              id:
+                crypto.randomUUID(),
+
+              role:
+                'assistant',
+
+              text:
+                'No pude procesar la consulta en este momento. Podés intentarlo nuevamente dentro de unos instantes.',
+
+              createdAt:
+                new Date(),
+            };
+
+            this.messages = [
+              ...this.messages,
+              assistantMessage,
+            ];
+          },
+      });
   }
 }
