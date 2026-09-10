@@ -12,7 +12,8 @@
     "test:embedding": "tsx --tsconfig tsconfig.scripts.json scripts/testEmbedding.ts",
     "test:qdrant": "tsx --tsconfig tsconfig.scripts.json scripts/testQdrant.ts",
     "setup:qdrant": "tsx --tsconfig tsconfig.scripts.json scripts/setupQdrant.ts",
-    "generate:embeddings": "tsx --tsconfig tsconfig.scripts.json scripts/generateEmbeddings.ts"
+    "generate:embeddings": "tsx --tsconfig tsconfig.scripts.json scripts/generateEmbeddings.ts",
+    "search:knowledge": "tsx --tsconfig tsconfig.scripts.json scripts/searchKnowledge.ts"
   },
   "private": true,
   "packageManager": "npm@11.19.0",
