@@ -7,7 +7,12 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "analyze:ram": "tsx --tsconfig tsconfig.scripts.json scripts/analyzeRamChunks.ts",
+    "test:embedding": "tsx --tsconfig tsconfig.scripts.json scripts/testEmbedding.ts",
+    "test:qdrant": "tsx --tsconfig tsconfig.scripts.json scripts/testQdrant.ts",
+    "setup:qdrant": "tsx --tsconfig tsconfig.scripts.json scripts/setupQdrant.ts",
+    "generate:embeddings": "tsx --tsconfig tsconfig.scripts.json scripts/generateEmbeddings.ts"
   },
   "private": true,
   "packageManager": "npm@11.19.0",
@@ -18,6 +23,9 @@
     "@angular/forms": "^22.1.0",
     "@angular/platform-browser": "^22.1.0",
     "@angular/router": "^22.1.0",
+    "@google/genai": "^2.21.0",
+    "@qdrant/js-client-rest": "^1.19.0",
+    "dotenv": "^17.4.2",
     "mammoth": "^1.12.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
