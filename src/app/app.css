@@ -1,0 +1,72 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+  background: #f5f7f8;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  padding: 1rem 1.5rem;
+
+  background: white;
+
+  border-bottom: 1px solid #dddddd;
+}
+
+.app-logo {
+  width: 72px;
+  height: 72px;
+
+  object-fit: cover;
+
+  border-radius: 50%;
+}
+
+.header-text h1 {
+  margin: 0;
+
+  font-size: 1.5rem;
+}
+
+.header-text p {
+  margin: 0.25rem 0 0;
+
+  color: #666666;
+}
+
+.app-content {
+  display: flex;
+  justify-content: center;
+
+  padding: 2rem 1rem;
+}
+
+.welcome-card {
+  width: 100%;
+  max-width: 720px;
+
+  padding: 2rem;
+
+  background: white;
+
+  border: 1px solid #dddddd;
+  border-radius: 16px;
+
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.welcome-card h2 {
+  margin-top: 0;
+}
+
+.welcome-card p {
+  line-height: 1.6;
+}
