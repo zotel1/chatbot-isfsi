@@ -1,4 +1,5 @@
 import {
+  ChangeDetectorRef,
   Component,
 } from '@angular/core';
 
@@ -89,7 +90,10 @@ export class ChatbotShell {
 
   constructor(
     private readonly chatService:
-      ChatService
+      ChatService,
+
+    private readonly changeDetector:
+      ChangeDetectorRef
   ) {}
 
   // ===================================================
@@ -137,7 +141,7 @@ export class ChatbotShell {
     ];
 
     // -------------------------------------------------
-    // 2. Estado de espera
+    // 2. Estado de carga
     // -------------------------------------------------
 
     this.isLoading =
@@ -146,8 +150,17 @@ export class ChatbotShell {
     this.avatarState =
       'thinking';
 
+    /*
+     * Estamos usando Angular zoneless.
+     *
+     * Le avisamos explícitamente a Angular
+     * que el estado del componente cambió.
+     */
+    this.changeDetector
+      .markForCheck();
+
     // -------------------------------------------------
-    // 3. Llamar al backend
+    // 3. Consultar backend
     // -------------------------------------------------
 
     this.chatService
@@ -169,6 +182,14 @@ export class ChatbotShell {
               this.avatarState =
                 'idle';
             }
+
+            /*
+             * Muy importante en modo zoneless:
+             * actualizar la interfaz después
+             * de finalizar la petición.
+             */
+            this.changeDetector
+              .markForCheck();
           }
         )
       )
@@ -182,6 +203,11 @@ export class ChatbotShell {
           (
             response
           ) => {
+
+            console.log(
+              'Respuesta de /api/chat:',
+              response
+            );
 
             this.avatarState =
               'replying';
@@ -209,6 +235,13 @@ export class ChatbotShell {
               ...this.messages,
               assistantMessage,
             ];
+
+            /*
+             * Avisamos a Angular que hay
+             * un nuevo mensaje para mostrar.
+             */
+            this.changeDetector
+              .markForCheck();
           },
 
         // =============================================
@@ -248,6 +281,9 @@ export class ChatbotShell {
               ...this.messages,
               assistantMessage,
             ];
+
+            this.changeDetector
+              .markForCheck();
           },
       });
   }
