@@ -1,0 +1,68 @@
+.chat-input-form {
+  display: flex;
+
+  align-items: flex-end;
+
+  gap: 0.75rem;
+
+  width: 100%;
+
+  padding: 1rem;
+
+  border-top: 1px solid #dce5e8;
+
+  background: white;
+}
+
+textarea {
+  flex: 1;
+
+  min-height: 44px;
+  max-height: 140px;
+
+  resize: vertical;
+
+  padding: 0.75rem 0.9rem;
+
+  border:
+    1px solid #b9c8cd;
+
+  border-radius: 12px;
+
+  outline: none;
+
+  line-height: 1.4;
+}
+
+textarea:focus {
+  border-color: #1f6d7a;
+
+  box-shadow:
+    0 0 0 3px rgba(31, 109, 122, 0.12);
+}
+
+button {
+  height: 44px;
+
+  padding: 0 1.2rem;
+
+  border: 0;
+
+  border-radius: 12px;
+
+  color: white;
+
+  background: #1f6d7a;
+
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: #185a65;
+}
+
+button:disabled {
+  opacity: 0.5;
+
+  cursor: not-allowed;
+}

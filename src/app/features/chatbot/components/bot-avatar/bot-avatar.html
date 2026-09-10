@@ -1,0 +1,22 @@
+<div
+  class="avatar-container"
+  [class.thinking]="state === 'thinking'"
+  [class.replying]="state === 'replying'"
+  [class.error]="state === 'error'"
+>
+
+  <img
+    src="/images/logo.jpeg"
+    alt="Avatar del asistente institucional"
+    class="avatar-image"
+  />
+
+  @if (state === 'thinking') {
+    <div class="thinking-dots">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  }
+
+</div>

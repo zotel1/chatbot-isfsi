@@ -1,0 +1,41 @@
+@if (sources.length > 0) {
+
+  <div class="sources">
+
+    <p class="sources-title">
+      Fuentes consultadas
+    </p>
+
+    @for (source of sources; track $index) {
+
+      <article class="source-card">
+
+        <strong>
+          {{ source.document }}
+        </strong>
+
+        @if (source.resolution) {
+          <span>
+            {{ source.resolution }}
+          </span>
+        }
+
+        @if (source.article) {
+          <span>
+            Artículo {{ source.article }}
+          </span>
+        }
+
+        @if (source.section) {
+          <span>
+            {{ source.section }}
+          </span>
+        }
+
+      </article>
+
+    }
+
+  </div>
+
+}

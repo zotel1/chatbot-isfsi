@@ -1,0 +1,18 @@
+.chatbot-page {
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  min-height: 100vh;
+
+  padding: 2rem 1rem;
+
+  background:
+    linear-gradient(
+      135deg,
+      #eef5f6,
+      #f8fafb
+    );
+}

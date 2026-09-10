@@ -1,0 +1,43 @@
+<section class="chatbot">
+
+  <header class="chatbot-header">
+
+    <app-bot-avatar
+      state="idle"
+      //state="thinking"
+    />
+
+    <div>
+
+      <h1>
+        Asistente Institucional
+      </h1>
+
+      <p>
+        ISFD Ituzaingó
+      </p>
+
+    </div>
+
+  </header>
+
+  <main class="chat-messages">
+
+    @for (
+      message of messages;
+      track message.id
+    ) {
+
+      <app-chat-message
+        [message]="message"
+      />
+
+    }
+
+  </main>
+
+  <app-chat-input
+    (sendMessage)="handleSendMessage($event)"
+  />
+
+</section>
