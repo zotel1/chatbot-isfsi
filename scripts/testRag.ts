@@ -20,6 +20,7 @@ import {
   env,
 } from '../server/infrastructure/config/env.js';
 
+
 // =====================================================
 // DEPENDENCIAS
 // =====================================================
@@ -51,6 +52,7 @@ const askQuestion =
     chatModel
   );
 
+
 // =====================================================
 // MAIN
 // =====================================================
@@ -63,6 +65,7 @@ async function main():
       .slice(2)
       .join(' ')
       .trim();
+
 
   if (!question) {
 
@@ -81,6 +84,7 @@ async function main():
     return;
   }
 
+
   console.log(
     '\n🤖 Consultando RAG...\n'
   );
@@ -89,11 +93,13 @@ async function main():
     `❓ ${question}\n`
   );
 
+
   const answer =
     await askQuestion
       .execute(
         question
       );
+
 
   console.log(
     '💬 RESPUESTA:\n'
@@ -103,25 +109,39 @@ async function main():
     answer.reply
   );
 
+
   console.log(
     '\n📚 FUENTES:\n'
   );
+
 
   for (
     const source
     of answer.sources
   ) {
 
-    const article =
+    const sourceType =
       source.article !== null
         ? `Artículo ${source.article}`
-        : 'Introducción de sección';
+        : source.kind === 'correlativity'
+          ? 'Correlatividad'
+          : source.kind === 'section'
+            ? 'Sección'
+            : source.kind === 'section-intro'
+              ? 'Introducción de sección'
+              : 'Fuente institucional';
+
 
     console.log(
-      `- ${source.document} | ${source.resolution} | ${article}`
+      `- ${source.document} | ${source.resolution} | ${sourceType}`
     );
   }
 }
+
+
+// =====================================================
+// EJECUCIÓN
+// =====================================================
 
 main()
   .catch(
@@ -133,9 +153,9 @@ main()
         '\n🔥 Error en RAG:'
       );
 
+
       if (
-        error instanceof
-        Error
+        error instanceof Error
       ) {
 
         console.error(
@@ -149,7 +169,9 @@ main()
         );
       }
 
+
       process.exitCode =
         1;
     }
   );
+  

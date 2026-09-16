@@ -10,4 +10,10 @@ export interface SourceReference {
   section: string | null;
 
   article: number | null;
+
+  kind:
+  | 'article'
+  | 'section-intro'
+  | 'section'
+  | 'correlativity';
 }

@@ -1,3 +1,7 @@
+import {
+  KnowledgeKind,
+} from './knowledge-chunk.js';
+
 export interface SourceReference {
   chunkId: string;
 
@@ -10,4 +14,7 @@ export interface SourceReference {
   section: string | null;
 
   article: number | null;
+
+  kind: KnowledgeKind;
 }
+
