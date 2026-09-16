@@ -1,7 +1,9 @@
+
 export type KnowledgeKind =
   | 'article'
-  | 'section-intro';
-
+  | 'section-intro'
+  | 'section'
+  | 'correlativity';
 export interface KnowledgeChunk {
   chunkId: string;
 

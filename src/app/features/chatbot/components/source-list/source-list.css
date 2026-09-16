@@ -1,37 +1,104 @@
 .sources {
-  margin-top: 0.75rem;
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
 
-  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
 
-  border-top: 1px solid #d9e2e5;
+.sources-header {
+  display: flex;
+  align-items: center;
+
+  gap: 0.4rem;
+
+  margin-bottom: 0.65rem;
+}
+
+.sources-icon {
+  font-size: 0.9rem;
 }
 
 .sources-title {
-  margin: 0 0 0.5rem;
+  margin: 0;
 
   font-size: 0.8rem;
   font-weight: 600;
 
-  color: #536b73;
+  opacity: 0.75;
+}
+
+.sources-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.5rem;
 }
 
 .source-card {
   display: flex;
   flex-direction: column;
 
-  gap: 0.15rem;
+  gap: 0.35rem;
 
-  margin-bottom: 0.5rem;
+  padding: 0.65rem 0.75rem;
 
-  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.65rem;
 
-  border-radius: 10px;
+  background:
+    rgba(255, 255, 255, 0.55);
 
-  background: #edf6f7;
-
-  font-size: 0.8rem;
+  overflow-wrap: anywhere;
 }
 
-.source-card span {
-  color: #536b73;
+.source-document {
+  font-size: 0.82rem;
+
+  line-height: 1.3;
+}
+
+.source-metadata {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 0.3rem 0.5rem;
+}
+
+.source-item {
+  font-size: 0.73rem;
+  line-height: 1.35;
+
+  opacity: 0.75;
+}
+
+.source-article {
+  font-weight: 600;
+
+  opacity: 0.9;
+}
+
+/* =========================================
+   TELÉFONOS PEQUEÑOS
+   320px - 360px aproximadamente
+   ========================================= */
+
+@media (max-width: 360px) {
+
+  .source-card {
+    padding: 0.55rem;
+  }
+
+  .source-metadata {
+    flex-direction: column;
+
+    gap: 0.2rem;
+  }
+
+  .source-document {
+    font-size: 0.78rem;
+  }
+
+  .source-item {
+    font-size: 0.7rem;
+  }
 }

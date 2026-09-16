@@ -1,58 +1,210 @@
-.chatbot {
+:host {
   display: flex;
 
+  width: 100%;
+  min-height: 100dvh;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 1.5rem;
+
+  box-sizing: border-box;
+}
+
+.chatbot {
+  display: flex;
   flex-direction: column;
 
-  width: min(100%, 900px);
+  width: min(100%, 820px);
 
-  height:
-    min(780px, calc(100vh - 4rem));
+  height: min(780px, calc(100dvh - 3rem));
 
   overflow: hidden;
 
-  border:
-    1px solid #dce5e8;
+  border-radius: 1rem;
 
-  border-radius: 18px;
-
-  background: #f4f8f9;
+  background: #ffffff;
 
   box-shadow:
-    0 16px 40px
-    rgba(0, 0, 0, 0.08);
+    0 12px 36px rgba(0, 0, 0, 0.12);
 }
+
+/* =========================================
+   CABECERA
+   ========================================= */
 
 .chatbot-header {
   display: flex;
-
   align-items: center;
 
-  gap: 1rem;
+  gap: 0.8rem;
 
-  padding: 1rem 1.25rem;
+  flex-shrink: 0;
 
-  color: white;
-
-  background: #164f5c;
+  padding: 1rem 1.2rem;
 }
 
 .chatbot-header h1 {
   margin: 0;
 
-  font-size: 1.25rem;
+  font-size: 1.1rem;
+  line-height: 1.25;
 }
 
 .chatbot-header p {
-  margin:
-    0.2rem 0 0;
+  margin: 0.15rem 0 0;
 
-  opacity: 0.8;
+  font-size: 0.85rem;
+
+  opacity: 0.75;
 }
 
+/* =========================================
+   MENSAJES
+   ========================================= */
+
 .chat-messages {
+  display: flex;
+  flex-direction: column;
+
   flex: 1;
 
-  overflow-y: auto;
+  gap: 0.9rem;
 
-  padding: 1.25rem;
+  min-height: 0;
+
+  padding: 1rem;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scroll-behavior: smooth;
+}
+
+/* =========================================
+   ESTADO PENSANDO
+   ========================================= */
+
+.chat-thinking {
+  display: flex;
+  align-items: center;
+
+  gap: 0.55rem;
+}
+
+.thinking-bubble {
+  padding: 0.65rem 0.8rem;
+
+  border-radius: 0.75rem;
+
+  font-size: 0.85rem;
+
+  opacity: 0.75;
+}
+
+/* =========================================
+   TABLETS
+   ========================================= */
+
+@media (max-width: 768px) {
+
+  :host {
+    padding: 0.75rem;
+  }
+
+  .chatbot {
+    width: 100%;
+
+    height:
+      calc(100dvh - 1.5rem);
+
+    border-radius: 0.85rem;
+  }
+
+  .chatbot-header {
+    padding: 0.85rem 1rem;
+  }
+
+  .chat-messages {
+    padding: 0.8rem;
+  }
+}
+
+/* =========================================
+   TELÉFONOS
+   ========================================= */
+
+@media (max-width: 480px) {
+
+  :host {
+    align-items: stretch;
+
+    min-height: 100dvh;
+
+    padding: 0;
+  }
+
+  .chatbot {
+    width: 100%;
+    height: 100dvh;
+
+    border-radius: 0;
+
+    box-shadow: none;
+  }
+
+  .chatbot-header {
+    padding:
+      max(0.75rem, env(safe-area-inset-top))
+      0.8rem
+      0.75rem;
+  }
+
+  .chatbot-header h1 {
+    font-size: 1rem;
+  }
+
+  .chatbot-header p {
+    font-size: 0.78rem;
+  }
+
+  .chat-messages {
+    padding: 0.7rem;
+
+    gap: 0.7rem;
+  }
+
+  .thinking-bubble {
+    font-size: 0.78rem;
+  }
+}
+
+/* =========================================
+   TELÉFONOS MUY PEQUEÑOS
+   ~320px
+   ========================================= */
+
+@media (max-width: 360px) {
+
+  .chatbot-header {
+    gap: 0.5rem;
+
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+
+  .chatbot-header h1 {
+    font-size: 0.92rem;
+  }
+
+  .chatbot-header p {
+    font-size: 0.72rem;
+  }
+
+  .chat-messages {
+    padding: 0.5rem;
+
+    gap: 0.6rem;
+  }
 }

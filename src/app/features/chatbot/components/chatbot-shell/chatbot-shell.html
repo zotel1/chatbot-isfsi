@@ -3,8 +3,7 @@
   <header class="chatbot-header">
 
     <app-bot-avatar
-      state="idle"
-      //state="thinking"
+      [state]="avatarState"
     />
 
     <div>
@@ -34,10 +33,27 @@
 
     }
 
+    @if (isLoading) {
+
+      <div class="chat-thinking">
+
+        <app-bot-avatar
+          state="thinking"
+        />
+
+        <div class="thinking-bubble">
+          Consultando la información institucional...
+        </div>
+
+      </div>
+
+    }
+
   </main>
 
   <app-chat-input
-    (sendMessage)="handleSendMessage($event)"
-  />
+  [disabled]="isLoading"
+  (sendMessage)="handleSendMessage($event)"
+/>
 
 </section>

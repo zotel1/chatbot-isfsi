@@ -122,12 +122,13 @@ implements VectorSearchPort {
               : 1,
 
           kind:
-            (
-              payload['kind'] ===
-              'section-intro'
-                ? 'section-intro'
-                : 'article'
-            ) as KnowledgeKind,
+  (
+    payload['kind'] === 'section-intro' ||
+    payload['kind'] === 'section' ||
+    payload['kind'] === 'correlativity'
+      ? payload['kind']
+      : 'article'
+  ) as KnowledgeKind,
 
           text:
             String(

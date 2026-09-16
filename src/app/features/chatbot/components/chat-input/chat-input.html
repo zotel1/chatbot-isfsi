@@ -7,15 +7,29 @@
     [(ngModel)]="message"
     name="message"
     rows="1"
-    placeholder="Escribí tu consulta..."
+    [disabled]="disabled"
+    [placeholder]="
+      disabled
+        ? 'Procesando consulta...'
+        : 'Escribí tu consulta...'
+    "
     aria-label="Escribí tu consulta"
   ></textarea>
 
   <button
     type="submit"
-    [disabled]="!message.trim()"
+    [disabled]="
+      disabled ||
+      !message.trim()
+    "
   >
-    Enviar
+
+    @if (disabled) {
+      Consultando...
+    } @else {
+      Enviar
+    }
+
   </button>
 
 </form>

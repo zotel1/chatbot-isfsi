@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 import 'dotenv/config';
 
@@ -11,16 +12,10 @@ import {
   QdrantClient,
 } from '@qdrant/js-client-rest';
 
+
 // =====================================================
 // CONFIGURACIÓN
 // =====================================================
-
-const INPUT_FILE = path.join(
-  process.cwd(),
-  'data',
-  'processed',
-  'ram_chunks.json'
-);
 
 const GEMINI_API_KEY =
   process.env.GEMINI_API_KEY;
@@ -45,44 +40,25 @@ const EMBEDDING_DIMENSIONS =
     '768'
   );
 
-/*
- * Flynn nos enseñó que enviar muchas
- * solicitudes seguidas puede provocar 429.
- *
- * Usaremos un segundo aproximadamente
- * entre embeddings.
- */
 const DELAY_BETWEEN_REQUESTS_MS =
   1000;
 
-/*
- * Los vectores se enviarán a Qdrant
- * en grupos de 10.
- */
 const UPSERT_BATCH_SIZE =
   10;
 
-/*
- * Reintentos máximos por embedding.
- */
 const MAX_RETRIES =
   5;
 
-/*
- * Espera inicial ante rate limit.
- */
 const RETRY_DELAY_MS =
   30_000;
+
 
 // =====================================================
 // TIPOS
 // =====================================================
 
-type ChunkKind =
-  | 'article'
-  | 'section-intro';
+interface KnowledgeChunk {
 
-interface RamChunk {
   id: string;
 
   sourceId: string;
@@ -93,66 +69,37 @@ interface RamChunk {
 
   jurisdiction: string;
 
-  chapter: string | null;
+  chapter?: string | null;
 
-  section: string | null;
+  section?: string | null;
 
-  article: number | null;
+  article?: number | null;
 
-  inciso: string | null;
+  inciso?: string | null;
 
-  chunkIndex: number;
+  chunkIndex?: number;
 
-  kind: ChunkKind;
+  kind?: string;
 
   text: string;
 
-  type: 'normativa';
+  type?: string;
+
+  [key: string]: unknown;
 }
 
-interface RamData {
-  metadata: {
-    totalArticles: number;
 
-    totalChunks: number;
+interface KnowledgeData {
+
+  metadata?: {
+    totalChunks?: number;
+
+    [key: string]: unknown;
   };
 
-  chunks: RamChunk[];
+  chunks: KnowledgeChunk[];
 }
 
-interface QdrantPoint {
-  id: number;
-
-  vector: number[];
-
-  payload: {
-    chunkId: string;
-
-    sourceId: string;
-
-    document: string;
-
-    resolution: string;
-
-    jurisdiction: string;
-
-    chapter: string | null;
-
-    section: string | null;
-
-    article: number | null;
-
-    inciso: string | null;
-
-    chunkIndex: number;
-
-    kind: ChunkKind;
-
-    text: string;
-
-    type: 'normativa';
-  };
-}
 
 // =====================================================
 // VALIDAR VARIABLES DE ENTORNO
@@ -161,20 +108,23 @@ interface QdrantPoint {
 function validateEnvironment(): void {
 
   if (!GEMINI_API_KEY) {
+
     throw new Error(
-      '❌ Falta GEMINI_API_KEY en .env'
+      '❌ Falta GEMINI_API_KEY.'
     );
   }
 
   if (!QDRANT_URL) {
+
     throw new Error(
-      '❌ Falta QDRANT_URL en .env'
+      '❌ Falta QDRANT_URL.'
     );
   }
 
   if (!QDRANT_API_KEY) {
+
     throw new Error(
-      '❌ Falta QDRANT_API_KEY en .env'
+      '❌ Falta QDRANT_API_KEY.'
     );
   }
 
@@ -184,11 +134,13 @@ function validateEnvironment(): void {
     ) ||
     EMBEDDING_DIMENSIONS <= 0
   ) {
+
     throw new Error(
       '❌ EMBEDDING_DIMENSIONS no es válido.'
     );
   }
 }
+
 
 // =====================================================
 // CLIENTES
@@ -211,8 +163,9 @@ const qdrant =
       QDRANT_API_KEY!,
   });
 
+
 // =====================================================
-// SLEEP
+// ESPERA
 // =====================================================
 
 function sleep(
@@ -228,33 +181,85 @@ function sleep(
   );
 }
 
+
+// =====================================================
+// CREAR ID ÚNICO Y ESTABLE PARA QDRANT
+// =====================================================
+
+function createStableUuid(
+  value: string
+): string {
+
+  const hash =
+    crypto
+      .createHash('sha256')
+      .update(value)
+      .digest();
+
+  const bytes =
+    Buffer.from(
+      hash.subarray(
+        0,
+        16
+      )
+    );
+
+  /*
+   * Convertimos los bytes en un UUID válido.
+   */
+
+  bytes[6] =
+    (bytes[6] & 0x0f) |
+    0x50;
+
+  bytes[8] =
+    (bytes[8] & 0x3f) |
+    0x80;
+
+  const hex =
+    bytes.toString(
+      'hex'
+    );
+
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    hex.slice(12, 16),
+    hex.slice(16, 20),
+    hex.slice(20, 32),
+  ].join('-');
+}
+
+
 // =====================================================
 // CARGAR JSON
 // =====================================================
 
-function loadRamChunks(): RamData {
+function loadKnowledgeFile(
+  filePath: string
+): KnowledgeData {
 
   if (
     !fs.existsSync(
-      INPUT_FILE
+      filePath
     )
   ) {
 
     throw new Error(
-      `❌ No existe el archivo:\n${INPUT_FILE}`
+      `❌ No existe el archivo:\n${filePath}`
     );
   }
 
   const raw =
     fs.readFileSync(
-      INPUT_FILE,
+      filePath,
       'utf-8'
     );
 
   const data =
     JSON.parse(
       raw
-    ) as RamData;
+    ) as KnowledgeData;
 
   if (
     !Array.isArray(
@@ -263,7 +268,7 @@ function loadRamChunks(): RamData {
   ) {
 
     throw new Error(
-      '❌ El JSON no contiene un array "chunks".'
+      `❌ El archivo ${filePath} no contiene un array "chunks".`
     );
   }
 
@@ -272,26 +277,37 @@ function loadRamChunks(): RamData {
   ) {
 
     throw new Error(
-      '❌ No existen chunks para procesar.'
+      `❌ El archivo ${filePath} no contiene chunks.`
     );
   }
 
   return data;
 }
 
+
 // =====================================================
-// CONSTRUIR TEXTO PARA EMBEDDING
+// CONSTRUIR TEXTO PARA EL EMBEDDING
 // =====================================================
 
 function buildEmbeddingText(
-  chunk: RamChunk
+  chunk: KnowledgeChunk
 ): string {
 
-  const context: string[] = [
-    `Documento: ${chunk.document}`,
-    `Resolución: ${chunk.resolution}`,
-    `Jurisdicción: ${chunk.jurisdiction}`,
-  ];
+  const context:
+    string[] = [];
+
+  context.push(
+    `Documento: ${chunk.document}`
+  );
+
+  context.push(
+    `Resolución: ${chunk.resolution}`
+  );
+
+  context.push(
+    `Jurisdicción: ${chunk.jurisdiction}`
+  );
+
 
   if (
     chunk.chapter
@@ -302,6 +318,7 @@ function buildEmbeddingText(
     );
   }
 
+
   if (
     chunk.section
   ) {
@@ -311,30 +328,49 @@ function buildEmbeddingText(
     );
   }
 
+
   if (
-    chunk.article !== null
+    chunk.article !== null &&
+    chunk.article !== undefined
   ) {
 
     context.push(
       `Artículo: ${chunk.article}`
     );
+  }
 
-  } else {
+
+  if (
+    chunk.inciso
+  ) {
 
     context.push(
-      'Contenido introductorio de sección'
+      `Inciso: ${chunk.inciso}`
     );
   }
+
+
+  if (
+    chunk.kind
+  ) {
+
+    context.push(
+      `Tipo de contenido: ${chunk.kind}`
+    );
+  }
+
 
   context.push(
     '',
     chunk.text
   );
 
+
   return context.join(
     '\n'
   );
 }
+
 
 // =====================================================
 // GENERAR EMBEDDING
@@ -347,6 +383,7 @@ async function generateEmbedding(
   let attempt =
     0;
 
+
   while (
     attempt <
     MAX_RETRIES
@@ -357,6 +394,7 @@ async function generateEmbedding(
       const response =
         await ai.models
           .embedContent({
+
             model:
               EMBEDDING_MODEL,
 
@@ -364,15 +402,18 @@ async function generateEmbedding(
               text,
 
             config: {
+
               outputDimensionality:
                 EMBEDDING_DIMENSIONS,
             },
           });
 
+
       const embedding =
         response
           .embeddings?.[0]
           ?.values;
+
 
       if (
         !embedding
@@ -383,17 +424,20 @@ async function generateEmbedding(
         );
       }
 
+
       if (
         embedding.length !==
         EMBEDDING_DIMENSIONS
       ) {
 
         throw new Error(
-          `Embedding inesperado: ${embedding.length} dimensiones. Se esperaban ${EMBEDDING_DIMENSIONS}.`
+          `Embedding inesperado: ${embedding.length} dimensiones.`
         );
       }
 
+
       return embedding;
+
 
     } catch (
       error: unknown
@@ -401,25 +445,31 @@ async function generateEmbedding(
 
       attempt++;
 
+
       const message =
         error instanceof Error
           ? error.message
           : String(error);
 
+
       const isRateLimit =
+
         message.includes(
           '429'
         ) ||
+
         message
           .toLowerCase()
           .includes(
             'resource_exhausted'
           ) ||
+
         message
           .toLowerCase()
           .includes(
             'rate'
           );
+
 
       if (
         isRateLimit &&
@@ -427,39 +477,38 @@ async function generateEmbedding(
         MAX_RETRIES
       ) {
 
-        /*
-         * Espera incremental:
-         *
-         * intento 1 → 30 s
-         * intento 2 → 60 s
-         * intento 3 → 90 s
-         */
         const waitTime =
           RETRY_DELAY_MS *
           attempt;
+
 
         console.warn(
           `⚠️ Límite de Gemini. Reintentando en ${waitTime / 1000}s...`
         );
 
+
         await sleep(
           waitTime
         );
 
+
         continue;
       }
+
 
       throw error;
     }
   }
+
 
   throw new Error(
     '❌ Se agotaron los reintentos de Gemini.'
   );
 }
 
+
 // =====================================================
-// VERIFICAR COLLECTION QDRANT
+// VERIFICAR COLLECTION
 // =====================================================
 
 async function validateQdrantCollection():
@@ -469,9 +518,11 @@ async function validateQdrantCollection():
     '🔎 Verificando collection de Qdrant...'
   );
 
+
   const collections =
     await qdrant
       .getCollections();
+
 
   const exists =
     collections
@@ -482,74 +533,49 @@ async function validateQdrantCollection():
           COLLECTION_NAME
       );
 
-  if (!exists) {
+
+  if (
+    !exists
+  ) {
 
     throw new Error(
       `❌ No existe la collection "${COLLECTION_NAME}".`
     );
   }
 
+
   console.log(
     `✅ Collection encontrada: ${COLLECTION_NAME}`
   );
 }
 
+
 // =====================================================
-// ENVIAR LOTE A QDRANT
+// PROCESAR UN ARCHIVO JSON
 // =====================================================
 
-async function upsertBatch(
-  points: QdrantPoint[]
+async function processFile(
+  filePath: string
 ): Promise<void> {
 
-  if (
-    points.length === 0
-  ) {
-
-    return;
-  }
-
-  await qdrant.upsert(
-    COLLECTION_NAME,
-    {
-      wait:
-        true,
-
-      points,
-    }
+  console.log(
+    '\n========================================'
   );
-}
-
-// =====================================================
-// PROCESO PRINCIPAL
-// =====================================================
-
-async function main():
-  Promise<void> {
 
   console.log(
-    '🚀 Generando embeddings de la RAM...\n'
+    `📄 Archivo: ${path.basename(filePath)}`
   );
 
-  // ---------------------------------------------------
-  // 1. Verificar Qdrant
-  // ---------------------------------------------------
-
-  await validateQdrantCollection();
-
-  // ---------------------------------------------------
-  // 2. Leer JSON
-  // ---------------------------------------------------
 
   const data =
-    loadRamChunks();
+    loadKnowledgeFile(
+      filePath
+    );
+
 
   const chunks =
     data.chunks;
 
-  console.log(
-    `📚 Artículos en metadata: ${data.metadata.totalArticles}`
-  );
 
   console.log(
     `🧩 Chunks a procesar: ${chunks.length}`
@@ -563,19 +589,10 @@ async function main():
     `📐 Dimensiones: ${EMBEDDING_DIMENSIONS}`
   );
 
-  console.log(
-    `📦 Collection: ${COLLECTION_NAME}\n`
-  );
-
-  // ---------------------------------------------------
-  // 3. Generar embeddings
-  // ---------------------------------------------------
 
   let batch:
-    QdrantPoint[] = [];
+    any[] = [];
 
-  let processed =
-    0;
 
   for (
     let index = 0;
@@ -587,134 +604,125 @@ async function main():
     const chunk =
       chunks[index];
 
-    const current =
-      index + 1;
 
     console.log(
-      `🧠 [${current}/${chunks.length}] ${chunk.id}`
+      `\n🧠 [${index + 1}/${chunks.length}] ${chunk.id}`
     );
 
+
+    console.log(
+      `   Documento: ${chunk.document}`
+    );
+
+
     if (
-      chunk.article !== null
+      chunk.section
     ) {
 
       console.log(
-        `   Artículo ${chunk.article}`
-      );
-
-    } else {
-
-      console.log(
-        `   Introducción: ${chunk.section ?? 'sin sección'}`
+        `   Sección: ${chunk.section}`
       );
     }
+
+
+    if (
+      chunk.kind
+    ) {
+
+      console.log(
+        `   Tipo: ${chunk.kind}`
+      );
+    }
+
 
     const embeddingText =
       buildEmbeddingText(
         chunk
       );
 
+
     const vector =
       await generateEmbedding(
         embeddingText
       );
 
+
     /*
-     * Usamos IDs numéricos simples en Qdrant.
+     * El ID se genera usando sourceId + id.
      *
-     * El identificador semántico real permanece
-     * en payload.chunkId.
+     * Esto evita que:
+     *
+     * RAM → punto 1
+     * Diseño → punto 1
+     *
+     * terminen sobrescribiéndose.
      */
-    const point:
-      QdrantPoint = {
+
+    const pointId =
+      createStableUuid(
+        `${chunk.sourceId}:${chunk.id}`
+      );
+
+
+    batch.push({
 
       id:
-        current,
+        pointId,
 
       vector,
 
       payload: {
 
+        ...chunk,
+
         chunkId:
           chunk.id,
 
-        sourceId:
-          chunk.sourceId,
-
-        document:
-          chunk.document,
-
-        resolution:
-          chunk.resolution,
-
-        jurisdiction:
-          chunk.jurisdiction,
-
-        chapter:
-          chunk.chapter,
-
-        section:
-          chunk.section,
-
-        article:
-          chunk.article,
-
-        inciso:
-          chunk.inciso,
-
-        chunkIndex:
-          chunk.chunkIndex,
-
-        kind:
-          chunk.kind,
-
-        text:
-          chunk.text,
-
         type:
-          chunk.type,
+          chunk.type ??
+          'normativa',
       },
-    };
+    });
 
-    batch.push(
-      point
-    );
-
-    processed++;
-
-    // -------------------------------------------------
-    // Enviar lote
-    // -------------------------------------------------
 
     if (
       batch.length >=
         UPSERT_BATCH_SIZE ||
-      current ===
-        chunks.length
+
+      index ===
+        chunks.length - 1
     ) {
 
       console.log(
         `   📤 Enviando lote de ${batch.length} punto(s) a Qdrant...`
       );
 
-      await upsertBatch(
-        batch
+
+      await qdrant.upsert(
+        COLLECTION_NAME,
+        {
+
+          wait:
+            true,
+
+          points:
+            batch,
+        }
       );
 
+
       console.log(
-        `   ✅ Lote guardado.`
+        '   ✅ Lote guardado.'
       );
+
 
       batch = [];
     }
 
-    // -------------------------------------------------
-    // Rate limiting preventivo
-    // -------------------------------------------------
 
     if (
-      current <
-      chunks.length
+      index <
+      chunks.length - 1
     ) {
 
       await sleep(
@@ -723,20 +731,81 @@ async function main():
     }
   }
 
-  // ---------------------------------------------------
-  // FINAL
-  // ---------------------------------------------------
+
+  console.log(
+    `\n✅ Archivo completado: ${path.basename(filePath)}`
+  );
+}
+
+
+// =====================================================
+// PROCESO PRINCIPAL
+// =====================================================
+
+async function main():
+  Promise<void> {
+
+  console.log(
+    '\n🚀 CARGA DE CONOCIMIENTO A QDRANT\n'
+  );
+
+
+  await validateQdrantCollection();
+
+
+  /*
+   * Todo lo escrito después de:
+   *
+   * npm run generate:embeddings --
+   *
+   * llegará aquí.
+   */
+
+  const argumentsFromTerminal =
+    process.argv.slice(2);
+
+
+  if (
+    argumentsFromTerminal.length ===
+    0
+  ) {
+
+    throw new Error(
+      [
+        '❌ Debés indicar al menos un archivo JSON.',
+        '',
+        'Ejemplo:',
+        '',
+        'npm run generate:embeddings -- ".\\data\\processed\\regimen_correlatividad_software_chunks.json"',
+      ].join('\n')
+    );
+  }
+
+
+  for (
+    const argument
+    of argumentsFromTerminal
+  ) {
+
+    const absolutePath =
+      path.resolve(
+        process.cwd(),
+        argument
+      );
+
+
+    await processFile(
+      absolutePath
+    );
+  }
+
 
   console.log(
     '\n========================================'
   );
 
   console.log(
-    '🎉 PROCESO COMPLETADO'
-  );
-
-  console.log(
-    `✅ Chunks procesados: ${processed}`
+    '🎉 IMPORTACIÓN COMPLETADA'
   );
 
   console.log(
@@ -744,13 +813,10 @@ async function main():
   );
 
   console.log(
-    `✅ Dimensiones: ${EMBEDDING_DIMENSIONS}`
-  );
-
-  console.log(
     '========================================'
   );
 }
+
 
 main()
   .catch(
@@ -762,9 +828,9 @@ main()
         '\n🔥 Error generando embeddings:'
       );
 
+
       if (
-        error instanceof
-        Error
+        error instanceof Error
       ) {
 
         console.error(
@@ -777,6 +843,7 @@ main()
           error
         );
       }
+
 
       process.exitCode =
         1;
