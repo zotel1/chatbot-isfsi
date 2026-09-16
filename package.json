@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "process:ram": "tsx --tsconfig tsconfig.scripts.json scripts/processRam.ts",
+    "process:calendario": "tsx --tsconfig tsconfig.scripts.json scripts/processCalendario.ts",
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
@@ -32,6 +33,7 @@
     "dotenv": "^17.4.2",
     "mammoth": "^1.12.2",
     "marked": "^18.0.12",
+    "node-html-parser": "^9.0.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
