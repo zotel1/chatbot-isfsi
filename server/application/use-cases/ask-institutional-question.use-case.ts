@@ -487,19 +487,38 @@ RESPUESTA:
     }
 
     if (
-      chunk.article !== null
-    ) {
+  chunk.article !== null
+) {
 
-      parts.push(
-        `Artículo ${chunk.article}`
-      );
+  parts.push(
+    `Artículo ${chunk.article}`
+  );
 
-    } else {
+} else if (
+  chunk.kind === 'correlativity'
+) {
 
-      parts.push(
-        'Introducción de sección'
-      );
-    }
+  parts.push(
+    'Correlatividad'
+  );
+
+} else if (
+  chunk.kind === 'section'
+) {
+
+  parts.push(
+    'Sección'
+  );
+
+} else if (
+  chunk.kind === 'section-intro'
+) {
+
+  parts.push(
+    'Introducción de sección'
+  );
+}
+ 
 
     return parts.join(
       ' | '
@@ -561,6 +580,9 @@ RESPUESTA:
 
         article:
           chunk.article,
+
+           kind:
+    chunk.kind,
       });
     }
 
