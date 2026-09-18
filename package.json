@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+   
     "process:ram": "tsx --tsconfig tsconfig.scripts.json scripts/processRam.ts",
     "ng": "ng",
     "start": "ng serve",
@@ -14,6 +15,7 @@
     "test:qdrant": "tsx --tsconfig tsconfig.scripts.json scripts/testQdrant.ts",
     "setup:qdrant": "tsx --tsconfig tsconfig.scripts.json scripts/setupQdrant.ts",
     "generate:embeddings": "tsx --tsconfig tsconfig.scripts.json scripts/generateEmbeddings.ts",
+    "generate:knowledge": "tsx --tsconfig tsconfig.scripts.json scripts/generateKnowledgeEmbeddings.ts",
     "search:knowledge": "tsx --tsconfig tsconfig.scripts.json scripts/searchKnowledge.ts",
     "test:rag": "tsx --tsconfig tsconfig.scripts.json scripts/testRag.ts",
     "dev:vercel": "vercel dev"
